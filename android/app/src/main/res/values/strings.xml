@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GuongMatPhuTheApp</string>
+    <string name="facebook_app_id">223944964776354</string>
+    <string name="fb_login_protocol_scheme">fb223944964776354</string>
+</resources>
