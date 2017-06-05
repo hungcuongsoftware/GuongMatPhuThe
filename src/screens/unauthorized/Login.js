@@ -1,12 +1,27 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, Button } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
+import firebase from 'firebase';
+
+// intial setup firebase
+const config = {
+    apiKey: 'AIzaSyDp-Kcv88JWMK_VkqR-kgDIripiCzLk-fc',
+    authDomain: 'guongmatphuthe.firebaseapp.com',
+    databaseURL: 'https://guongmatphuthe.firebaseio.com',
+    projectId: 'guongmatphuthe',
+    storageBucket: 'guongmatphuthe.appspot.com',
+    messagingSenderId: '689222036575'
+  };
+  firebase.initializeApp(config);
+
 
 class Login extends Component {
     state = {
-        logged: false
+        logged: false,
+        animating: false
     }
 
+    // using base function of facbebook sdk
     handleLogin = () => {
         if (!this.state.logged) {
             LoginManager.logInWithPublishPermissions(['publish_actions'])
@@ -29,16 +44,42 @@ class Login extends Component {
             this.setState({ logged: false });
             LoginManager.logOut();
         }
-
     }
 
-    gotoAuthorized() {
-        this.props.navigation.navigate('Authorized');
+    onLogin = async() => {
+        try {
+            this.setState({
+                animating: true
+            });
+            
+            const result = await LoginManager.logInWithReadPermissions(['public_profile', 'email']);
+            const tokenData= await AccessToken.getCurrentAccessToken();
+            const token = tokenData.accessToken.toString();
+            const credential = firebase.auth.FacebookAuthProvider.credential(token);
+            const user = await firebase.auth().signInWithCredential(credential);
+            console.log(credential);
+            this.setState({
+                animating:false
+            });
+        } catch (error) {
+            this.setState({
+                animating:false
+            });
+            console.log(error.message);
+        }
+
+        
     }
     render() {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{margin:10 }} />Welcome to my applition</Text>
+                <Text style={{ margin: 10 }} >Welcome to my applition</Text>
+                <ActivityIndicator 
+                    animating={this.state.animating }
+                    color='#ddd'
+                    size='large'
+
+                />
                 <LoginButton
                     publishPermissions={['publish_actions']}
                     onLoginFinished={
@@ -60,7 +101,7 @@ class Login extends Component {
 
 
                 <TouchableOpacity
-                    onPress={this.handleLogin}
+                    onPress={this.onLogin}
                     sytle={{
                         backgroundColor: 'green',
                         marginTop: 10,
@@ -70,15 +111,6 @@ class Login extends Component {
                 >
                     <Text>{this.state.logged ? 'Log out' : 'Log in'}</Text>
                 </TouchableOpacity>
-
-                <Button
-                    onPress={this.handleLogin}
-                    title="Learn More"
-                    color="#841584"
-                    backgroundColor='green'
-                    accessibilityLabel="Learn more about this purple button"
-                />
-
             </View>
         );
     }
